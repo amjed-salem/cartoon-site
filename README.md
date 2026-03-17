@@ -1,6 +1,6 @@
-# Cartoonify Website (AI API)
+# Cartoonify Demo Website
 
-A frontend-only website where users upload a photo and convert it into a cartoon-style image using a **real AI API** (DeepAI Toonify).
+A simple **frontend-only** website where users can upload a photo and get a cartoon-style demo output directly in the browser.
 
 ## Features
 
@@ -8,30 +8,10 @@ A frontend-only website where users upload a photo and convert it into a cartoon
 - Image upload button
 - Original and cartoon image shown side by side
 - Download button for the final cartoon image
-- Reset button for quick retries
-- Real AI API integration (no local demo filter)
+- Reset button to quickly test another photo
+- No backend required (pure HTML/CSS/JS)
 
-## Setup instructions
-
-### 1) Get a free API key
-
-1. Create an account at [DeepAI](https://deepai.org/).
-2. Open your account/API page and copy your API key.
-
-### 2) Add your API key
-
-Edit `config.js` and set your key:
-
-```js
-window.APP_CONFIG = {
-  DEEPAI_API_KEY: "YOUR_DEEPAI_API_KEY_HERE"
-};
-```
-
-> `config.js` is loaded in the browser, so this is fine for local demos only.
-> For production, put API calls behind a backend proxy so the key is not exposed.
-
-## Run locally
+## Quick start
 
 ### Option 1: Open directly
 
@@ -43,7 +23,7 @@ Open `index.html` in your browser.
 python3 -m http.server 8000
 ```
 
-Then open:
+Then visit:
 
 - `http://localhost:8000`
 
@@ -51,5 +31,11 @@ Then open:
 
 - `index.html` – app layout and controls
 - `styles.css` – modern responsive styling
-- `script.js` – upload flow + DeepAI API request + download logic
-- `config.js` – local API key configuration
+- `script.js` – upload handling, demo cartoon effect, and download logic
+
+## Notes
+
+- The cartoon output is a demo effect built with client-side canvas processing:
+  - color quantization
+  - edge detection + dark edge blending
+- This is a starter frontend. You can later replace the demo transformation with a real ML cartoonization API or backend.

@@ -1,22 +1,15 @@
 const imageUpload = document.getElementById("imageUpload");
 const originalImg = document.getElementById("originalImg");
 const cartoonImg = document.getElementById("cartoonImg");
-const generateBtn = document.getElementById("generateBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const resetBtn = document.getElementById("resetBtn");
 const originalFrame = document.getElementById("originalFrame");
 const cartoonFrame = document.getElementById("cartoonFrame");
 const statusMessage = document.getElementById("statusMessage");
 
-const deepAiKey = window.APP_CONFIG?.DEEPAI_API_KEY || "";
-let selectedFile = null;
-let cartoonImageUrl = "";
+let cartoonDataUrl = "";
 
-if (!deepAiKey) {
-  setStatus("Missing API key. Add DEEPAI_API_KEY in config.js to continue.");
-}
-
-imageUpload.addEventListener("change", async (event) => {
+imageUpload.addEventListener("change", (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
@@ -25,108 +18,141 @@ imageUpload.addEventListener("change", async (event) => {
     return;
   }
 
-  selectedFile = file;
-  cartoonImageUrl = "";
-  cartoonImg.hidden = true;
-  cartoonImg.removeAttribute("src");
-  restoreImagePlaceholder(cartoonFrame, "AI cartoon result appears here.");
-  downloadBtn.disabled = true;
-  resetBtn.disabled = false;
-
-  const sourceUrl = URL.createObjectURL(file);
-  originalImg.src = sourceUrl;
-  originalImg.hidden = false;
-  restoreImagePlaceholder(originalFrame);
-
-  generateBtn.disabled = !deepAiKey;
-  setStatus(deepAiKey ? "Image ready. Click Generate Cartoon." : "Add API key in config.js first.");
-});
-
-generateBtn.addEventListener("click", async () => {
-  if (!selectedFile) {
-    setStatus("Upload an image first.");
-    return;
-  }
-
-  if (!deepAiKey) {
-    setStatus("Missing API key. Add DEEPAI_API_KEY in config.js.");
-    return;
-  }
-
-  generateBtn.disabled = true;
-  setStatus("Generating cartoon via DeepAI API...");
-
-  try {
-    const form = new FormData();
-    form.append("image", selectedFile);
-
-    const response = await fetch("https://api.deepai.org/api/toonify", {
-      method: "POST",
-      headers: {
-        "api-key": deepAiKey
-      },
-      body: form
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.output_url) {
-      const msg = data.err || "AI API request failed.";
-      throw new Error(msg);
+  const reader = new FileReader();
+  reader.onload = () => {
+    const sourceUrl = reader.result;
+    if (typeof sourceUrl !== "string") {
+      setStatus("Unable to read this image file.");
+      return;
     }
 
-    cartoonImageUrl = data.output_url;
-    cartoonImg.src = cartoonImageUrl;
-    cartoonImg.hidden = false;
-    restoreImagePlaceholder(cartoonFrame);
+    originalImg.src = sourceUrl;
+    originalImg.hidden = false;
+    restoreImagePlaceholder(originalFrame);
 
-    downloadBtn.disabled = false;
-    setStatus("Done! Cartoon generated with DeepAI.");
-  } catch (error) {
-    setStatus(`Generation failed: ${error.message}`);
-  } finally {
-    generateBtn.disabled = false;
-  }
+    setStatus("Generating cartoon preview...");
+    generateCartoonPreview(sourceUrl);
+  };
+  reader.onerror = () => setStatus("File read failed. Please try another image.");
+
+  reader.readAsDataURL(file);
 });
 
-downloadBtn.addEventListener("click", async () => {
-  if (!cartoonImageUrl) return;
+downloadBtn.addEventListener("click", () => {
+  if (!cartoonDataUrl) return;
 
-  try {
-    const response = await fetch(cartoonImageUrl);
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = "cartoon-image-ai.png";
-    a.click();
-
-    URL.revokeObjectURL(blobUrl);
-  } catch (_error) {
-    setStatus("Download failed. Try opening the image in a new tab and save manually.");
-  }
+  const a = document.createElement("a");
+  a.href = cartoonDataUrl;
+  a.download = "cartoon-image-demo.png";
+  a.click();
 });
 
 resetBtn.addEventListener("click", () => {
   imageUpload.value = "";
-  selectedFile = null;
-  cartoonImageUrl = "";
-
   originalImg.hidden = true;
   originalImg.removeAttribute("src");
   cartoonImg.hidden = true;
   cartoonImg.removeAttribute("src");
-
-  generateBtn.disabled = true;
+  cartoonDataUrl = "";
   downloadBtn.disabled = true;
   resetBtn.disabled = true;
-
   restoreImagePlaceholder(originalFrame, "Your uploaded image appears here.");
-  restoreImagePlaceholder(cartoonFrame, "AI cartoon result appears here.");
-
+  restoreImagePlaceholder(cartoonFrame, "Cartoon preview appears here.");
   setStatus("Upload a JPG or PNG file to begin.");
 });
+
+function generateCartoonPreview(sourceUrl) {
+  const img = new Image();
+
+  img.onload = () => {
+    const maxSize = 1200;
+    const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+    const width = Math.floor(img.width * scale);
+    const height = Math.floor(img.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) {
+      setStatus("Canvas is not available in this browser.");
+      return;
+    }
+
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = quantize(data[i], 32);
+      data[i + 1] = quantize(data[i + 1], 32);
+      data[i + 2] = quantize(data[i + 2], 32);
+
+      data[i] = Math.min(255, data[i] * 1.05);
+      data[i + 1] = Math.min(255, data[i + 1] * 1.04);
+      data[i + 2] = Math.min(255, data[i + 2] * 1.03);
+    }
+
+    const edges = detectEdges(data, width, height);
+    for (let i = 0; i < data.length; i += 4) {
+      if (edges[i / 4] > 55) {
+        data[i] *= 0.22;
+        data[i + 1] *= 0.22;
+        data[i + 2] *= 0.22;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    cartoonDataUrl = canvas.toDataURL("image/png");
+
+    cartoonImg.src = cartoonDataUrl;
+    cartoonImg.hidden = false;
+    restoreImagePlaceholder(cartoonFrame);
+
+    downloadBtn.disabled = false;
+    resetBtn.disabled = false;
+    setStatus("Done! You can now download the cartoon image.");
+  };
+
+  img.onerror = () => setStatus("Could not load image data.");
+  img.src = sourceUrl;
+}
+
+function quantize(value, step) {
+  return Math.min(255, Math.floor(value / step) * step + step / 2);
+}
+
+function detectEdges(data, width, height) {
+  const gray = new Uint8Array(width * height);
+  for (let i = 0, j = 0; i < data.length; i += 4, j += 1) {
+    gray[j] = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) | 0;
+  }
+
+  const out = new Uint8Array(width * height);
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const idx = y * width + x;
+      const gx =
+        -gray[idx - width - 1] -
+        2 * gray[idx - 1] -
+        gray[idx + width - 1] +
+        gray[idx - width + 1] +
+        2 * gray[idx + 1] +
+        gray[idx + width + 1];
+      const gy =
+        -gray[idx - width - 1] -
+        2 * gray[idx - width] -
+        gray[idx - width + 1] +
+        gray[idx + width - 1] +
+        2 * gray[idx + width] +
+        gray[idx + width + 1];
+      out[idx] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+    }
+  }
+
+  return out;
+}
 
 function setStatus(message) {
   statusMessage.textContent = message;
