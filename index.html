@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cartoonify Demo</title>
+    <meta
+      name="description"
+      content="Upload a photo and preview a cartoon-style demo result in your browser."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" aria-labelledby="app-title">
+        <header class="hero">
+          <p class="badge">Frontend Demo</p>
+          <h1 id="app-title">Turn Your Photo Into a Cartoon</h1>
+          <p class="subtitle">
+            Upload an image and get a demo cartoon-style preview instantly in the browser.
+          </p>
+        </header>
+
+        <div class="controls" role="group" aria-label="Image actions">
+          <label class="upload-btn" for="imageUpload">Upload Photo</label>
+          <input id="imageUpload" type="file" accept="image/*" />
+          <button id="downloadBtn" disabled>Download Cartoon Image</button>
+          <button id="resetBtn" class="secondary" disabled>Reset</button>
+        </div>
+
+        <p id="statusMessage" class="status" aria-live="polite">
+          Upload a JPG or PNG file to begin.
+        </p>
+
+        <section class="preview-grid" aria-live="polite">
+          <article class="preview-card">
+            <h2>Original</h2>
+            <div class="image-frame" id="originalFrame">
+              <p class="placeholder">Your uploaded image appears here.</p>
+              <img id="originalImg" alt="Original uploaded image" hidden />
+            </div>
+          </article>
+
+          <article class="preview-card">
+            <h2>Cartoon Style (Demo)</h2>
+            <div class="image-frame" id="cartoonFrame">
+              <p class="placeholder">Cartoon preview appears here.</p>
+              <img id="cartoonImg" alt="Cartoon-style demo output" hidden />
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
