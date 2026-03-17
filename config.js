@@ -1,0 +1,3 @@
+window.APP_CONFIG = {
+  DEEPAI_API_KEY: "54a1d8f1-6d06-49ee-9ff0-0182314257f2"
+};

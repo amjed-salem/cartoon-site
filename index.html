@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cartoonify (AI API)</title>
+    <meta
+      name="description"
+      content="Upload a photo and convert it into a cartoon image using a real AI API."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" aria-labelledby="app-title">
+        <header class="hero">
+          <p class="badge">AI API Powered</p>
+          <h1 id="app-title">Turn Your Photo Into a Cartoon</h1>
+          <p class="subtitle">
+            Upload an image and generate a cartoon version using the DeepAI Toonify API.
+          </p>
+        </header>
+
+        <div class="controls" role="group" aria-label="Image actions">
+          <label class="upload-btn" for="imageUpload">Upload Photo</label>
+          <input id="imageUpload" type="file" accept="image/*" />
+          <button id="generateBtn" disabled>Generate Cartoon</button>
+          <button id="downloadBtn" disabled>Download Cartoon Image</button>
+          <button id="resetBtn" class="secondary" disabled>Reset</button>
+        </div>
+
+        <p id="statusMessage" class="status" aria-live="polite">
+          Add your API key in <code>config.js</code>, then upload a JPG or PNG.
+        </p>
+
+        <section class="preview-grid" aria-live="polite">
+          <article class="preview-card">
+            <h2>Original</h2>
+            <div class="image-frame" id="originalFrame">
+              <p class="placeholder">Your uploaded image appears here.</p>
+              <img id="originalImg" alt="Original uploaded image" hidden />
+            </div>
+          </article>
+
+          <article class="preview-card">
+            <h2>Cartoon (AI Result)</h2>
+            <div class="image-frame" id="cartoonFrame">
+              <p class="placeholder">AI cartoon result appears here.</p>
+              <img id="cartoonImg" alt="AI cartoon output" hidden />
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
